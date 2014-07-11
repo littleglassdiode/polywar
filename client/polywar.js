@@ -21,6 +21,7 @@ function press(evt) {
         case KEY.DOWN: 
         case KEY.S: input.down = true; break;
     }
+    server.send(JSON.stringify(input));
 }
 
 function release(evt) {
@@ -38,23 +39,21 @@ function release(evt) {
         case KEY.DOWN:
         case KEY.S: input.down = false; break;
     }
-}
-function Player() {
-    this.position = [100, 100];
-    this.angle = 0;
-    this.color = "#090";
-    this.lineColor = "#0e0";
+    server.send(JSON.stringify(input));
 }
 
-Player.prototype.draw = function(ctx) {
+function drawPlayer(player, ctx) {
+    if (player === "no")
+        return;
+
     ctx.save();
 
-    ctx.fillStyle = this.color;
-    ctx.strokeStyle = this.lineColor;
+    ctx.fillStyle = player.color;
+    ctx.strokeStyle = player.lineColor;
     ctx.lineWidth = 2;
 
-    ctx.translate(this.position[0], this.position[1]);
-    ctx.rotate(this.angle);
+    ctx.translate(player.position[0], player.position[1]);
+    ctx.rotate(player.angle);
 
     ctx.beginPath();
     ctx.moveTo(0, -15);
@@ -68,41 +67,21 @@ Player.prototype.draw = function(ctx) {
     ctx.restore();
 }
 
-Player.prototype.rotate = function(dir) {
-    this.angle += dir;
-}
+var server = new WebSocket("ws://localhost:8080/");
 
-Player.prototype.drive = function(speed) {
-    this.position[0] += speed * Math.sin(this.angle);
-    this.position[1] -= speed * Math.cos(this.angle);
-}
-
-function drawGame(player) {
+server.onmessage = function drawGame(event) {
     var c = document.getElementById("polywarCanvas");
     var ctx = c.getContext("2d");
 
-    if (input.right) {
-        player.rotate(Math.PI/30);
-    }
-    if (input.left) {
-        player.rotate(-Math.PI/30);
-    }
-    if (input.up) {
-        player.drive(6);
-    }
-    if (input.down) {
-        player.drive(-4);
-    }
+    var players = JSON.parse(event.data);
 
     c.width = c.width;
-    player.draw(ctx);
-
-    setTimeout(function(){drawGame(player)},100/3);
+    for (var p = 0; p < players.length; p++) {
+        drawPlayer(players[p], ctx);
+    }
 }
 
 window.onload = function() {
     document.addEventListener("keydown", press, true);
     document.addEventListener("keyup", release, true);
-    var p1 = new Player();
-    drawGame(p1);
 }
