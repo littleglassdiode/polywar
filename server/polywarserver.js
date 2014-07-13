@@ -38,7 +38,11 @@ function start(hs) {
         console.log(JSON.stringify(this.players));
 
         ws.interval = setInterval(function(ws) {
-            ws.send(JSON.stringify(wss.players));
+            try {
+                ws.send(JSON.stringify(wss.players));
+            } catch (Error) {
+                console.log('error caught');
+            }
 
             if (!ws.input)
                 return;
