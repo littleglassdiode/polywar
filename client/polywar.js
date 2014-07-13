@@ -8,6 +8,7 @@ var input = {
 
 function press(evt) {
     var code = evt.keyCode;
+    var send = true;
     switch (code) {
         case KEY.RIGHT:
         case KEY.D: input.right = true; break;
@@ -20,12 +21,16 @@ function press(evt) {
         
         case KEY.DOWN: 
         case KEY.S: input.down = true; break;
+
+        default: send = false; break;
     }
-    server.send(JSON.stringify(input));
+    if (send)
+        server.send(JSON.stringify(input));
 }
 
 function release(evt) {
     var code = evt.keyCode;
+    var send = true;
     switch (code) {
         case KEY.RIGHT:
         case KEY.D: input.right = false; break;
@@ -38,8 +43,11 @@ function release(evt) {
         
         case KEY.DOWN:
         case KEY.S: input.down = false; break;
+
+        default: send = false; break;
     }
-    server.send(JSON.stringify(input));
+    if (send)
+        server.send(JSON.stringify(input));
 }
 
 function drawPlayer(player, ctx) {

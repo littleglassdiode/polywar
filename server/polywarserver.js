@@ -1,13 +1,21 @@
 var WebSocketServer = require('ws').Server;
 
+function randomColor() {
+    var color = "" + Math.floor(Math.random() * 16777215).toString(16);
+    while (color.length < 6) {
+        color = "0" + color;
+    }
+    return "#" + color;
+}
+
 function start(hs) {
     var wss = new WebSocketServer({server: hs, path: "/polywar-server"});
 
     function Player(position) {
         this.position = position;
         this.angle = 0;
-        this.color = '#'+Math.floor(Math.random()*16777215).toString(16);
-        this.lineColor = '#'+Math.floor(Math.random()*16777215).toString(16);
+        this.color = randomColor();
+        this.lineColor = randomColor();
     }
 
     Player.prototype.rotate = function(dir) {
