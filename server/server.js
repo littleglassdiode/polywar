@@ -4,8 +4,8 @@ var WebSocketServer = require('ws').Server
 function Player(position) {
     this.position = position;
     this.angle = 0;
-    this.color = "#090";
-    this.lineColor = "#0e0";
+    this.color = '#'+Math.floor(Math.random()*16777215).toString(16);
+    this.lineColor = '#'+Math.floor(Math.random()*16777215).toString(16);
 }
 
 Player.prototype.rotate = function(dir) {
