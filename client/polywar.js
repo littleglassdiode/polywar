@@ -67,7 +67,7 @@ function drawPlayer(player, ctx) {
     ctx.restore();
 }
 
-var server = new WebSocket("ws://localhost:8080/");
+var server = new WebSocket("ws://" + window.location.host + "/polywar-server");
 
 server.onmessage = function drawGame(event) {
     var c = document.getElementById("polywarCanvas");
