@@ -1,6 +1,6 @@
 var WebSocketServer = require('ws').Server;
 
-function randomColor() {
+function randomColor24() {
     var color = "" + Math.floor(Math.random() * 16777215).toString(16);
     while (color.length < 6) {
         color = "0" + color;
@@ -8,11 +8,19 @@ function randomColor() {
     return "#" + color;
 }
 
+function randomColor12() {
+    var color = "" + Math.floor(Math.random() * 4095).toString(16);
+    while (color.length < 3) {
+        color = "0" + color;
+    }
+    return "#" + color;
+}
+
 function Player(position) {
-    this.position = position;
+    this.pos = position;
     this.angle = 0;
-    this.color = randomColor();
-    this.lineColor = randomColor();
+    this.fill = randomColor12();
+    this.stroke = randomColor12();
 }
 
 Player.prototype.rotate = function(dir) {
@@ -20,8 +28,12 @@ Player.prototype.rotate = function(dir) {
 }
 
 Player.prototype.drive = function(speed) {
-    this.position[0] += speed * Math.sin(this.angle);
-    this.position[1] -= speed * Math.cos(this.angle);
+    this.pos[0] += speed * Math.sin(this.angle * Math.PI/180);
+    this.pos[1] -= speed * Math.cos(this.angle * Math.PI/180);
+
+    // XXX This is just for reducing network traffic
+    this.pos[0] = parseFloat(this.pos[0].toFixed(2));
+    this.pos[1] = parseFloat(this.pos[1].toFixed(2));
 }
 
 function start(hs) {
@@ -52,10 +64,10 @@ function start(hs) {
             if (!ws.input)
                 return;
             if (ws.input.right) {
-                ws.player.rotate(Math.PI/30);
+                ws.player.rotate(6);
             }
             if (ws.input.left) {
-                ws.player.rotate(-Math.PI/30);
+                ws.player.rotate(-6);
             }
             if (ws.input.up) {
                 ws.player.drive(6);

@@ -53,12 +53,12 @@ function release(evt) {
 function drawPlayer(player, ctx) {
     ctx.save();
 
-    ctx.fillStyle = player.color;
-    ctx.strokeStyle = player.lineColor;
+    ctx.fillStyle = player.fill;
+    ctx.strokeStyle = player.stroke;
     ctx.lineWidth = 2;
 
-    ctx.translate(player.position[0], player.position[1]);
-    ctx.rotate(player.angle);
+    ctx.translate(player.pos[0], player.pos[1]);
+    ctx.rotate(player.angle * Math.PI/180);
 
     ctx.beginPath();
     ctx.moveTo(0, -15);
