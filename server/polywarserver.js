@@ -8,24 +8,24 @@ function randomColor() {
     return "#" + color;
 }
 
+function Player(position) {
+    this.position = position;
+    this.angle = 0;
+    this.color = randomColor();
+    this.lineColor = randomColor();
+}
+
+Player.prototype.rotate = function(dir) {
+    this.angle += dir;
+}
+
+Player.prototype.drive = function(speed) {
+    this.position[0] += speed * Math.sin(this.angle);
+    this.position[1] -= speed * Math.cos(this.angle);
+}
+
 function start(hs) {
     var wss = new WebSocketServer({server: hs, path: "/polywar-server"});
-
-    function Player(position) {
-        this.position = position;
-        this.angle = 0;
-        this.color = randomColor();
-        this.lineColor = randomColor();
-    }
-
-    Player.prototype.rotate = function(dir) {
-        this.angle += dir;
-    }
-
-    Player.prototype.drive = function(speed) {
-        this.position[0] += speed * Math.sin(this.angle);
-        this.position[1] -= speed * Math.cos(this.angle);
-    }
 
     wss.on('connection', function(ws) {
         ws.on('message', function(message) {
