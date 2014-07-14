@@ -1,4 +1,4 @@
-var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40};
+var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40, SPACE:32};
 var input = {
     right: false,
     up: false,
@@ -51,9 +51,6 @@ function release(evt) {
 }
 
 function drawPlayer(player, ctx) {
-    if (player === "no")
-        return;
-
     ctx.save();
 
     ctx.fillStyle = player.color;

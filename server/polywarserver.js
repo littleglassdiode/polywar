@@ -36,18 +36,15 @@ function start(hs) {
         ws.on('close', function() {
             console.log('client disconnected');
             clearInterval(this.interval);
-            wss.players[this.player_id] = "no";
         });
 
         console.log('client connected');
-        this.players = this.players || [];
-        ws.player_id = this.players.length;
-        this.players.push(new Player([100, 100]));
-        console.log(JSON.stringify(this.players));
+        ws.player = new Player([100, 100]);
+        console.log(JSON.stringify(wss.clients.map(function(s) {return s.player;})));
 
         ws.interval = setInterval(function(ws) {
             try {
-                ws.send(JSON.stringify(wss.players));
+                ws.send(JSON.stringify(wss.clients.map(function(s) {return s.player;})));
             } catch (Error) {
                 console.log('error caught');
             }
@@ -55,16 +52,16 @@ function start(hs) {
             if (!ws.input)
                 return;
             if (ws.input.right) {
-                wss.players[ws.player_id].rotate(Math.PI/30);
+                ws.player.rotate(Math.PI/30);
             }
             if (ws.input.left) {
-                wss.players[ws.player_id].rotate(-Math.PI/30);
+                ws.player.rotate(-Math.PI/30);
             }
             if (ws.input.up) {
-                wss.players[ws.player_id].drive(6);
+                ws.player.drive(6);
             }
             if (ws.input.down) {
-                wss.players[ws.player_id].drive(-4);
+                ws.player.drive(-4);
             }
         }, 100/3, ws);
     });
