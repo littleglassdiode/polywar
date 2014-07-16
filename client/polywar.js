@@ -122,7 +122,6 @@ server.onmessage = function drawGame(event) {
                 var stroke = new Uint8Array(msg, 5, 3);
                 if (JSON.stringify(players) === "{}")
                     my_id = id;
-                    console.log(my_id);
                 players[id] = new Player(fill, stroke);
                 break;
             // Player disconnected
