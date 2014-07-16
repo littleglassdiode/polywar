@@ -1,5 +1,7 @@
 var WebSocketServer = require('ws').Server;
 
+var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08};
+
 function randomColor() {
     return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255),
             Math.floor(Math.random() * 255)];
@@ -36,9 +38,20 @@ function start(hs) {
             var reply = [];
             switch (msg[0]) {
                 case 0x00:
+                    for (var c in wss.clients) {
+                        if (wss.clients[c].player.id === undefined)
+                            continue;
+                        reply.push(0x00);
+                        reply.push(wss.clients[c].player.id);
+                        reply.push.apply(reply, wss.clients[c].player.fill);
+                        reply.push.apply(reply, wss.clients[c].player.stroke);
+                        this.send(new Buffer(reply));
+                        reply = [];
+                    }
                     broadcast = true;
                     reply.push(0x00);
-                    for (var id = 0, found = false; found; id++) {
+                    for (var id = 0, found = true; found; id++) {
+                        found = false;
                         for (var c in wss.clients) {
                             if (id === wss.clients[c].player.id) {
                                 found = true;
@@ -46,9 +59,13 @@ function start(hs) {
                             }
                         }
                     }
+                    this.player.id = --id;
                     reply.push(id);
                     reply.push.apply(reply, this.player.fill);
                     reply.push.apply(reply, this.player.stroke);
+                    break;
+                case 0x01:
+                    ws.input = msg[1];
                     break;
             }
             if (reply !== []) {
@@ -69,24 +86,24 @@ function start(hs) {
         ws.player = new Player([100, 100]);
 
         ws.interval = setInterval(function(ws) {
+            var player;
+            var reply = new Buffer(1 + 7*wss.clients.length);
+            var offset = 1;
+            reply[0] = 0x01;
+            for (var c in wss.clients) {
+                player = wss.clients[c].player;
+                reply[offset] = player.id;
+                offset += 1;
+                reply[offset] = 0x07;
+                offset += 1;
+                reply.writeUInt16BE(Math.floor(player.pos[0]), offset);
+                offset += 2;
+                reply.writeUInt16BE(Math.floor(player.pos[1]), offset);
+                offset += 2;
+                reply[offset] = player.angle;
+                offset += 1;
+            }
             try {
-                var player;
-                var reply = new Buffer(1 + 7*wss.clients.length);
-                var offset = 1;
-                reply[0] = 0x01;
-                for (var c in wss.clients) {
-                    player = wss.clients[c].player;
-                    reply[offset] = 0;
-                    offset += 1;
-                    reply[offset] = 0x03;
-                    offset += 1;
-                    reply.writeUInt16BE(player.pos[0], offset);
-                    offset += 2;
-                    reply.writeUInt16BE(player.pos[1], offset);
-                    offset += 2;
-                    reply[offset] = player.angle;
-                    offset += 1;
-                }
                 ws.send(reply);
             } catch (Error) {
                 console.log('error caught');
@@ -94,16 +111,16 @@ function start(hs) {
 
             if (!ws.input)
                 return;
-            if (ws.input.right) {
+            if (ws.input & INPUTS.RIGHT) {
                 ws.player.rotate(4);
             }
-            if (ws.input.left) {
+            if (ws.input & INPUTS.LEFT) {
                 ws.player.rotate(-4);
             }
-            if (ws.input.up) {
+            if (ws.input & INPUTS.UP) {
                 ws.player.drive(6);
             }
-            if (ws.input.down) {
+            if (ws.input & INPUTS.DOWN) {
                 ws.player.drive(-4);
             }
         }, 100/3, ws);
