@@ -118,12 +118,12 @@ server.onmessage = function drawGame(event) {
                     if (vars[0] & 0x01) {
                         position = new DataView(msg, offset, 2);
                         offset += 2;
-                        players[id].pos[0] = position.getUint16(0);
+                        players[id].pos[0] = position.getInt16(0);
                     }
                     if (vars[0] & 0x02) {
                         position = new DataView(msg, offset, 2);
                         offset += 2;
-                        players[id].pos[1] = position.getUint16(0);
+                        players[id].pos[1] = position.getInt16(0);
                     }
                     if (vars[0] & 0x04) {
                         players[id].angle = (new Uint8Array(msg, offset, 1))[0];

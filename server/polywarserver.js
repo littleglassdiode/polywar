@@ -96,9 +96,9 @@ function start(hs) {
                 offset += 1;
                 reply[offset] = 0x07;
                 offset += 1;
-                reply.writeUInt16BE(Math.floor(player.pos[0]), offset);
+                reply.writeInt16BE(Math.floor(player.pos[0]), offset);
                 offset += 2;
-                reply.writeUInt16BE(Math.floor(player.pos[1]), offset);
+                reply.writeInt16BE(Math.floor(player.pos[1]), offset);
                 offset += 2;
                 reply[offset] = player.angle;
                 offset += 1;
