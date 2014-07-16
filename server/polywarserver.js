@@ -22,10 +22,6 @@ Player.prototype.rotate = function(dir) {
 Player.prototype.drive = function(speed) {
     this.pos[0] += speed * Math.sin(this.angle * Math.PI/128);
     this.pos[1] -= speed * Math.cos(this.angle * Math.PI/128);
-
-    // XXX This is just for reducing network traffic
-    this.pos[0] = parseFloat(this.pos[0].toFixed(2));
-    this.pos[1] = parseFloat(this.pos[1].toFixed(2));
 }
 
 function start(hs) {
@@ -34,11 +30,14 @@ function start(hs) {
     wss.on('connection', function(ws) {
         ws.on('message', function(message) {
             var msg = new Buffer(message);
-            var reply = [];
             switch (msg[0]) {
+                // Join
                 case 0x00:
+                    var reply = [];
                     // Send the new player's info to everyone
                     reply.push(0x00);
+                    // Figure out the lowest available ID and assign it
+                    // TODO: Nothing stops this from becoming greater than 255
                     for (var id = 0, found = true; found; id++) {
                         found = false;
                         for (var c in wss.clients) {
@@ -69,24 +68,37 @@ function start(hs) {
                     }
                     break;
 
+                // Keys
                 case 0x01:
+                    // Put the buttons where they will be noticed later
                     ws.input = msg[1];
                     break;
             }
         });
 
-        ws.on('close', function(ws) {
+        // When a client disconnects
+        ws.on('close', function() {
+            // Notify everyone that this client has disconnected
             var msg = new Buffer([0x01, this.player.id]);
             for (var c in wss.clients) {
                 wss.clients[c].send(msg);
             }
+            // Stop sending updates to this client
             clearInterval(this.interval);
-        }, ws);
+        });
 
+        // Give this client a player object
         ws.player = new Player([100, 100]);
 
+        // Send updates to this client
+        // TODO: Send updates to all clients in the same interval function, so
+        // that there's no chance that clients can get different information
+        // from one another.
         ws.interval = setInterval(function(ws) {
             var player;
+            // TODO: do diffs here so fewer octets can be sent and the
+            // variables byte actually has a purpose.  This will make the reply
+            // buffer have a non-linear length, unfortunately.
             var reply = new Buffer(1 + 7*wss.clients.length);
             var offset = 1;
             reply[0] = 0x02;
@@ -103,14 +115,16 @@ function start(hs) {
                 reply[offset] = player.angle;
                 offset += 1;
             }
+            // If a weird race condition occurs and this happens while a client
+            // is disconnecting, we don't want the server to crash, so try to
+            // send and don't crash if we can't.
             try {
                 ws.send(reply);
             } catch (Error) {
                 console.log('error caught');
             }
 
-            if (!ws.input)
-                return;
+            // Move however the inputs say to move
             if (ws.input & INPUTS.RIGHT) {
                 ws.player.rotate(4);
             }
