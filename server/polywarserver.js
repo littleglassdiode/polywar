@@ -34,21 +34,10 @@ function start(hs) {
     wss.on('connection', function(ws) {
         ws.on('message', function(message) {
             var msg = new Buffer(message);
-            var broadcast = false;
             var reply = [];
             switch (msg[0]) {
                 case 0x00:
-                    for (var c in wss.clients) {
-                        if (wss.clients[c].player.id === undefined)
-                            continue;
-                        reply.push(0x00);
-                        reply.push(wss.clients[c].player.id);
-                        reply.push.apply(reply, wss.clients[c].player.fill);
-                        reply.push.apply(reply, wss.clients[c].player.stroke);
-                        this.send(new Buffer(reply));
-                        reply = [];
-                    }
-                    broadcast = true;
+                    // Send the new player's info to everyone
                     reply.push(0x00);
                     for (var id = 0, found = true; found; id++) {
                         found = false;
@@ -63,25 +52,36 @@ function start(hs) {
                     reply.push(id);
                     reply.push.apply(reply, this.player.fill);
                     reply.push.apply(reply, this.player.stroke);
+                    for (var c in wss.clients) {
+                        wss.clients[c].send(new Buffer(reply));
+                    }
+
+                    // Send everyone's info to the new player
+                    for (var c in wss.clients) {
+                        reply = [];
+                        if (wss.clients[c].player.id === this.player.id)
+                            continue;
+                        reply.push(0x00);
+                        reply.push(wss.clients[c].player.id);
+                        reply.push.apply(reply, wss.clients[c].player.fill);
+                        reply.push.apply(reply, wss.clients[c].player.stroke);
+                        this.send(new Buffer(reply));
+                    }
                     break;
+
                 case 0x01:
                     ws.input = msg[1];
                     break;
             }
-            if (reply !== []) {
-                if (broadcast) {
-                    for (var c in wss.clients) {
-                        wss.clients[c].send(new Buffer(reply));
-                    }
-                } else {
-                    this.send(new Buffer(reply));
-                }
-            }
         });
 
-        ws.on('close', function() {
+        ws.on('close', function(ws) {
+            var msg = new Buffer([0x01, this.player.id]);
+            for (var c in wss.clients) {
+                wss.clients[c].send(msg);
+            }
             clearInterval(this.interval);
-        });
+        }, ws);
 
         ws.player = new Player([100, 100]);
 
@@ -89,16 +89,16 @@ function start(hs) {
             var player;
             var reply = new Buffer(1 + 7*wss.clients.length);
             var offset = 1;
-            reply[0] = 0x01;
+            reply[0] = 0x02;
             for (var c in wss.clients) {
                 player = wss.clients[c].player;
                 reply[offset] = player.id;
                 offset += 1;
                 reply[offset] = 0x07;
                 offset += 1;
-                reply.writeInt16BE(Math.floor(player.pos[0]), offset);
+                reply.writeInt16BE(Math.floor(player.pos[0]*4), offset);
                 offset += 2;
-                reply.writeInt16BE(Math.floor(player.pos[1]), offset);
+                reply.writeInt16BE(Math.floor(player.pos[1]*4), offset);
                 offset += 2;
                 reply[offset] = player.angle;
                 offset += 1;

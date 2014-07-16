@@ -77,6 +77,7 @@ Player.prototype.draw = function(ctx) {
 
 var server = new WebSocket("ws://" + window.location.host + "/polywar-server");
 var players = {};
+var my_id;
 
 WebSocket.prototype.sendPacket = function(opcode, bytes) {
     var msg = new ArrayBuffer(bytes.length + 1);
@@ -104,28 +105,37 @@ server.onmessage = function drawGame(event) {
                 var id = (new Uint8Array(msg, 1, 1))[0];
                 var fill = new Uint8Array(msg, 2, 3);
                 var stroke = new Uint8Array(msg, 5, 3);
+                if (JSON.stringify(players) === "{}")
+                    my_id = id;
+                    console.log(my_id);
                 players[id] = new Player(fill, stroke);
                 break;
             case 0x01:
+                var id = (new Uint8Array(msg, 1, 1))[0];
+                delete players[id];
+                break;
+            case 0x02:
                 var offset = 1;
                 var id, vars, position;
                 while (offset < msg.byteLength) {
                     id = (new Uint8Array(msg, offset, 1))[0];
-                    players[id] = players[id] || new Player();
                     offset += 1;
                     vars = new Uint8Array(msg, offset, 1);
                     offset += 1;
                     if (vars[0] & 0x01) {
                         position = new DataView(msg, offset, 2);
                         offset += 2;
-                        players[id].pos[0] = position.getInt16(0);
+                    if (players[id])
+                        players[id].pos[0] = position.getInt16(0)/4;
                     }
                     if (vars[0] & 0x02) {
                         position = new DataView(msg, offset, 2);
                         offset += 2;
-                        players[id].pos[1] = position.getInt16(0);
+                    if (players[id])
+                        players[id].pos[1] = position.getInt16(0)/4;
                     }
                     if (vars[0] & 0x04) {
+                    if (players[id])
                         players[id].angle = (new Uint8Array(msg, offset, 1))[0];
                         offset += 1;
                     }
@@ -138,8 +148,11 @@ server.onmessage = function drawGame(event) {
 
         c.width = c.width;
         for (var p in players) {
+            if (p == my_id)
+                continue;
             players[p].draw(ctx);
         }
+        players[my_id].draw(ctx);
     });
     reader.readAsArrayBuffer(event.data);
 }
