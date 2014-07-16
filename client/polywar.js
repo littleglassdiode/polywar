@@ -89,6 +89,8 @@ var players = {};
 // The ID of the guy playing on this client will be stored here
 var my_id;
 
+var c, ctx;
+
 // Convenience function to send a packet with an opcode and an array of bytes
 WebSocket.prototype.sendPacket = function(opcode, bytes) {
     var msg = new ArrayBuffer(bytes.length + 1);
@@ -162,9 +164,6 @@ server.onmessage = function drawGame(event) {
         // Redraw
         // TODO: don't make this happen every time we got a message from the
         // server
-        // Get the canvas and a context for it
-        var c = document.getElementById("polywarCanvas");
-        var ctx = c.getContext("2d");
 
         // Clear the canvas
         c.width = c.width;
@@ -181,6 +180,10 @@ server.onmessage = function drawGame(event) {
 }
 
 window.onload = function() {
+    // Get the canvas and a context for it
+    c = document.getElementById("polywarCanvas");
+    ctx = c.getContext("2d");
+
     document.addEventListener("keydown", press, true);
     document.addEventListener("keyup", release, true);
 }
