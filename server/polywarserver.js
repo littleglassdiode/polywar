@@ -1,4 +1,5 @@
 var WebSocketServer = require('ws').Server;
+var Variables = require('./variables');
 
 var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08, SPACE: 0x10};
 
@@ -26,8 +27,20 @@ Player.prototype.drive = function(speed) {
 }
 
 Player.prototype.fire = function() {
-    this.shots.push(new Shot(this.position, this.angle, 6));
-    return this.shots[this.shots.length - 1];
+    if (this.shots.length < Variables.PLAYER_MAX_SHOTS) {
+        this.shots.push(new Shot(this.position.slice(), this.angle, 6));
+        return this.shots[this.shots.length - 1];
+    } else {
+        return null;
+    }
+}
+
+Player.prototype.updateShots = function() {
+    for (var s in this.shots) {
+        this.shots[s].update();
+        if (this.shots[s].time < 0)
+            this.shots.splice(s, 1);
+    }
 }
 
 function Shot(position, angle, speed) {
@@ -38,11 +51,14 @@ function Shot(position, angle, speed) {
         this.speed * Math.sin(this.angle * Math.PI/128),
         -this.speed * Math.cos(this.angle * Math.PI/128)
     ];
+    this.time = Variables.SHOT_TIME;
 }
 
 Shot.prototype.update = function() {
     this.position[0] += this.velocity[0];
     this.position[1] += this.velocity[1];
+
+    this.time--;
 }
 
 function start(hs) {
@@ -100,12 +116,14 @@ function start(hs) {
                     // TODO: do shotty-things here
                     var shot = this.player.fire();
 
+                    if (shot === null) break;
+
                     var reply = new Buffer(7);
                     reply[0] = 0x03;
                     reply.writeInt16BE(Math.floor(shot.position[0]*4), 1);
                     reply.writeInt16BE(Math.floor(shot.position[1]*4), 3);
-                    reply[5] = shot.speed;
-                    reply[6] = shot.angle;
+                    reply[5] = shot.angle;
+                    reply[6] = shot.speed;
                     for (var c in wss.clients) {
                         wss.clients[c].send(reply);
                     }
@@ -164,20 +182,18 @@ function start(hs) {
         // Move however the inputs say to move
         for (var c in wss.clients) {
             if (wss.clients[c].input & INPUTS.RIGHT) {
-                wss.clients[c].player.rotate(1);
+                wss.clients[c].player.rotate(Variables.PLAYER_ROTATION_SPEED);
             }
             if (wss.clients[c].input & INPUTS.LEFT) {
-                wss.clients[c].player.rotate(-1);
+                wss.clients[c].player.rotate(-Variables.PLAYER_ROTATION_SPEED);
             }
             if (wss.clients[c].input & INPUTS.UP) {
-                wss.clients[c].player.drive(3);
+                wss.clients[c].player.drive(Variables.PLAYER_SPEED);
             }
             if (wss.clients[c].input & INPUTS.DOWN) {
-                wss.clients[c].player.drive(-2);
+                wss.clients[c].player.drive(-Variables.PLAYER_REVERSE_SPEED);
             }
-            for (var s in wss.clients[c].shots) {
-                wss.clients[c].shots[s].update();
-            }
+            wss.clients[c].player.updateShots();
         }
     }, 100/6);
 }

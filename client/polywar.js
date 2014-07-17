@@ -112,17 +112,20 @@ Player.prototype.draw = function(ctx) {
 
 function Shot(data) {
     this.position = [data.getInt16(0)/4, data.getInt16(2)/4];
-    this.speed = data.getInt8(4);
-    this.angle = data.getInt8(5);
+    this.angle = data.getInt8(4);
+    this.speed = data.getInt8(5);
     this.velocity = [
         this.speed * Math.sin(this.angle * Math.PI/128),
         -this.speed * Math.cos(this.angle * Math.PI/128)
     ];
+    this.time = 120;
 }
 
 Shot.prototype.update = function() {
     this.position[0] += this.velocity[0];
     this.position[1] += this.velocity[1];
+
+    this.time--;
 }
 
 Shot.prototype.draw = function(ctx) {
@@ -230,6 +233,9 @@ server.onmessage = function drawGame(event) {
         for (var s in shots) {
             shots[s].draw(ctx);
             shots[s].update();
+            if (shots[s].time < 0) {
+                delete shots[s];
+            }
         }
     });
     reader.readAsArrayBuffer(event.data);
