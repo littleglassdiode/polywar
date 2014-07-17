@@ -1,5 +1,5 @@
 var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40, SPACE:32};
-var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08};
+var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08, SPACE: 0x10};
 var input = 0;
 
 function press(evt) {
@@ -17,6 +17,8 @@ function press(evt) {
         
         case KEY.DOWN: 
         case KEY.S: input |= INPUTS.DOWN; break;
+
+        case KEY.SPACE: input |= INPUTS.SPACE; break;
 
         default: send = false; break;
     }
@@ -39,6 +41,8 @@ function release(evt) {
         
         case KEY.DOWN: 
         case KEY.S: input &= ~INPUTS.DOWN; break;
+
+        case KEY.SPACE: input &= ~INPUTS.SPACE; break;
 
         default: send = false; break;
     }

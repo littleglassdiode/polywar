@@ -1,6 +1,6 @@
 var WebSocketServer = require('ws').Server;
 
-var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08};
+var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08, SPACE: 0x10};
 
 function randomColor() {
     return [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255),
@@ -22,6 +22,12 @@ Player.prototype.rotate = function(dir) {
 Player.prototype.drive = function(speed) {
     this.pos[0] += speed * Math.sin(this.angle * Math.PI/128);
     this.pos[1] -= speed * Math.cos(this.angle * Math.PI/128);
+}
+
+function Shot(position, angle, speed) {
+    this.position = position;
+    this.angle = angle;
+    this.speed = speed;
 }
 
 function start(hs) {
@@ -83,62 +89,65 @@ function start(hs) {
             for (var c in wss.clients) {
                 wss.clients[c].send(msg);
             }
-            // Stop sending updates to this client
-            clearInterval(this.interval);
         });
 
         // Give this client a player object
         ws.player = new Player([100, 100]);
 
-        // Send updates to this client
-        // TODO: Send updates to all clients in the same interval function, so
-        // that there's no chance that clients can get different information
-        // from one another.
-        ws.interval = setInterval(function(ws) {
-            var player;
-            // TODO: do diffs here so fewer octets can be sent and the
-            // variables byte actually has a purpose.  This will make the reply
-            // buffer have a non-linear length, unfortunately.
-            var reply = new Buffer(1 + 7*wss.clients.length);
-            var offset = 1;
-            reply[0] = 0x02;
-            for (var c in wss.clients) {
-                player = wss.clients[c].player;
-                reply[offset] = player.id;
-                offset += 1;
-                reply[offset] = 0x07;
-                offset += 1;
-                reply.writeInt16BE(Math.floor(player.pos[0]*4), offset);
-                offset += 2;
-                reply.writeInt16BE(Math.floor(player.pos[1]*4), offset);
-                offset += 2;
-                reply[offset] = player.angle;
-                offset += 1;
-            }
-            // If a weird race condition occurs and this happens while a client
-            // is disconnecting, we don't want the server to crash, so try to
-            // send and don't crash if we can't.
-            try {
-                ws.send(reply);
-            } catch (Error) {
-                console.log('error caught');
-            }
-
-            // Move however the inputs say to move
-            if (ws.input & INPUTS.RIGHT) {
-                ws.player.rotate(4);
-            }
-            if (ws.input & INPUTS.LEFT) {
-                ws.player.rotate(-4);
-            }
-            if (ws.input & INPUTS.UP) {
-                ws.player.drive(6);
-            }
-            if (ws.input & INPUTS.DOWN) {
-                ws.player.drive(-4);
-            }
-        }, 100/3, ws);
     });
+
+    // Send updates to this client
+    // TODO: Send updates to all clients in the same interval function, so
+    // that there's no chance that clients can get different information
+    // from one another.
+    wss.interval = setInterval(function() {
+        var player;
+        // TODO: do diffs here so fewer octets can be sent and the
+        // variables byte actually has a purpose.  This will make the reply
+        // buffer have a non-linear length, unfortunately.
+        var reply = new Buffer(1 + 7*wss.clients.length);
+        var offset = 1;
+        reply[0] = 0x02;
+        for (var c in wss.clients) {
+            player = wss.clients[c].player;
+            reply[offset] = player.id;
+            offset += 1;
+            reply[offset] = 0x07;
+            offset += 1;
+            reply.writeInt16BE(Math.floor(player.pos[0]*4), offset);
+            offset += 2;
+            reply.writeInt16BE(Math.floor(player.pos[1]*4), offset);
+            offset += 2;
+            reply[offset] = player.angle;
+            offset += 1;
+        }
+        // If a weird race condition occurs and this happens while a client
+        // is disconnecting, we don't want the server to crash, so try to
+        // send and don't crash if we can't.
+        try {
+            for (var c in wss.clients) {
+                wss.clients[c].send(reply);
+            }
+        } catch (e) {
+            console.log('error caught');
+        }
+
+        // Move however the inputs say to move
+        for (var c in wss.clients) {
+            if (wss.clients[c].input & INPUTS.RIGHT) {
+                wss.clients[c].player.rotate(4);
+            }
+            if (wss.clients[c].input & INPUTS.LEFT) {
+                wss.clients[c].player.rotate(-4);
+            }
+            if (wss.clients[c].input & INPUTS.UP) {
+                wss.clients[c].player.drive(6);
+            }
+            if (wss.clients[c].input & INPUTS.DOWN) {
+                wss.clients[c].player.drive(-4);
+            }
+        }
+    }, 100/3);
 }
 
 exports.start = start;
