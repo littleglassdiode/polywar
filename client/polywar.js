@@ -4,23 +4,47 @@ var input = 0;
 
 function press(evt) {
     var code = evt.keyCode;
-    var send = true;
+    var send = false;
     switch (code) {
         case KEY.RIGHT:
-        case KEY.D: input |= INPUTS.RIGHT; break;
+        case KEY.D:
+            if (!(input & INPUTS.RIGHT)) {
+                input |= INPUTS.RIGHT;
+                send = true;
+            }
+            break;
         
         case KEY.UP:
-        case KEY.W: input |= INPUTS.UP; break;
+        case KEY.W:
+            if (!(input & INPUTS.UP)) {
+                input |= INPUTS.UP;
+                send = true;
+            }
+            break;
         
         case KEY.LEFT:
-        case KEY.A: input |= INPUTS.LEFT; break;
+        case KEY.A:
+            if (!(input & INPUTS.LEFT)) {
+                input |= INPUTS.LEFT;
+                send = true;
+            }
+            break;
         
         case KEY.DOWN: 
-        case KEY.S: input |= INPUTS.DOWN; break;
+        case KEY.S:
+            if (!(input & INPUTS.DOWN)) {
+                input |= INPUTS.DOWN;
+                send = true;
+            }
+            break;
 
-        case KEY.SPACE: input |= INPUTS.SPACE; break;
-
-        default: send = false; break;
+        case KEY.SPACE:
+            if (!(input & INPUTS.SPACE)) {
+                input |= INPUTS.SPACE;
+                server.sendPacket(0x02, []);
+                send = false;
+            }
+            break;
     }
     if (send)
         server.sendPacket(0x01, [input]);
@@ -42,7 +66,7 @@ function release(evt) {
         case KEY.DOWN: 
         case KEY.S: input &= ~INPUTS.DOWN; break;
 
-        case KEY.SPACE: input &= ~INPUTS.SPACE; break;
+        case KEY.SPACE: input &= ~INPUTS.SPACE; send = false; break;
 
         default: send = false; break;
     }

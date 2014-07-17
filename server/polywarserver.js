@@ -78,6 +78,13 @@ function start(hs) {
                 case 0x01:
                     // Put the buttons where they will be noticed later
                     ws.input = msg[1];
+                    console.log('input');
+                    break;
+
+                // Shot
+                case 0x02:
+                    // TODO: do shotty-things here
+                    console.log('shots fired');
                     break;
             }
         });
