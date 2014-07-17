@@ -75,7 +75,7 @@ function release(evt) {
 }
 
 function Player(fill, stroke) {
-    this.pos = [0, 0];
+    this.position = [0, 0];
     this.angle = 0;
     this.fill = "rgb("+fill[0]+","+fill[1]+","+fill[2]+")";
     this.stroke = "rgb("+stroke[0]+","+stroke[1]+","+stroke[2]+")";
@@ -91,7 +91,7 @@ Player.prototype.draw = function(ctx) {
     ctx.lineWidth = 2;
 
     // Transform according to the location and rotation of the player
-    ctx.translate(this.pos[0], this.pos[1]);
+    ctx.translate(this.position[0], this.position[1]);
     ctx.rotate(this.angle * Math.PI/128);
 
     // Draw the triangle
@@ -110,12 +110,38 @@ Player.prototype.draw = function(ctx) {
     ctx.restore();
 }
 
+function Shot(data) {
+    this.position = [data.getInt16(0)/4, data.getInt16(2)/4];
+    this.speed = data.getInt8(4);
+    this.angle = data.getInt8(5);
+    this.velocity = [
+        this.speed * Math.sin(this.angle * Math.PI/128),
+        -this.speed * Math.cos(this.angle * Math.PI/128)
+    ];
+}
+
+Shot.prototype.update = function() {
+    this.position[0] += this.velocity[0];
+    this.position[1] += this.velocity[1];
+}
+
+Shot.prototype.draw = function(ctx) {
+    ctx.fillStyle = "#0f0";
+    ctx.strokeStyle = "#070";
+    ctx.beginPath();
+    ctx.arc(this.position[0], this.position[1], 3, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.stroke();
+}
+
 // Connect to the server
 var server = new WebSocket("ws://" + window.location.host + "/polywar-server");
 // Players will be stored here
 var players = {};
 // The ID of the guy playing on this client will be stored here
 var my_id;
+
+var shots = [];
 
 var c, ctx;
 
@@ -162,30 +188,27 @@ server.onmessage = function drawGame(event) {
             // Player update(s)
             case 0x02:
                 var offset = 1;
-                var id, vars, position;
+                var id, position;
                 while (offset < msg.byteLength) {
                     id = (new Uint8Array(msg, offset, 1))[0];
                     offset += 1;
-                    vars = new Uint8Array(msg, offset, 1);
-                    offset += 1;
-                    if (vars[0] & 0x01) {
-                        position = new DataView(msg, offset, 2);
-                        offset += 2;
+                    position = new DataView(msg, offset, 2);
+                    offset += 2;
                     if (players[id])
-                        players[id].pos[0] = position.getInt16(0)/4;
-                    }
-                    if (vars[0] & 0x02) {
-                        position = new DataView(msg, offset, 2);
-                        offset += 2;
+                        players[id].position[0] = position.getInt16(0)/4;
+                    position = new DataView(msg, offset, 2);
+                    offset += 2;
                     if (players[id])
-                        players[id].pos[1] = position.getInt16(0)/4;
-                    }
-                    if (vars[0] & 0x04) {
+                        players[id].position[1] = position.getInt16(0)/4;
                     if (players[id])
                         players[id].angle = (new Uint8Array(msg, offset, 1))[0];
-                        offset += 1;
-                    }
+                    offset += 1;
                 }
+                break;
+            // Shot fired
+            case 0x03:
+                var data = new DataView(msg, 1, 6);
+                shots.push(new Shot(data));
                 break;
         }
 
@@ -203,6 +226,11 @@ server.onmessage = function drawGame(event) {
         }
         // Draw myself
         players[my_id].draw(ctx);
+
+        for (var s in shots) {
+            shots[s].draw(ctx);
+            shots[s].update();
+        }
     });
     reader.readAsArrayBuffer(event.data);
 }
