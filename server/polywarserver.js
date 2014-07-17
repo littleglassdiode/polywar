@@ -142,19 +142,19 @@ function start(hs) {
         // Move however the inputs say to move
         for (var c in wss.clients) {
             if (wss.clients[c].input & INPUTS.RIGHT) {
-                wss.clients[c].player.rotate(4);
+                wss.clients[c].player.rotate(2);
             }
             if (wss.clients[c].input & INPUTS.LEFT) {
-                wss.clients[c].player.rotate(-4);
+                wss.clients[c].player.rotate(-2);
             }
             if (wss.clients[c].input & INPUTS.UP) {
-                wss.clients[c].player.drive(6);
+                wss.clients[c].player.drive(3);
             }
             if (wss.clients[c].input & INPUTS.DOWN) {
-                wss.clients[c].player.drive(-4);
+                wss.clients[c].player.drive(-2);
             }
         }
-    }, 100/3);
+    }, 100/6);
 }
 
 exports.start = start;
