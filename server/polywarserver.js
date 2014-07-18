@@ -26,18 +26,69 @@ Player.prototype.drive = function(speed) {
     this.position[1] -= speed * Math.cos(this.angle * Math.PI/128);
 }
 
+Player.prototype.contains = function(point) {
+    // Quit before any additional math if there's obviously no way the point is
+    // in the player.
+    if (Math.abs(point[0] - this.position[0]) > 15 ||
+        Math.abs(point[1] - this.position[1]) > 15) {
+        return false;
+    }
+    // Figure out the three corners of the player.  By knowing the player's
+    // shape, I can use some short-cuts here to make the math simpler.
+    var front = [15 * Math.sin(this.angle * Math.PI/128),
+                 -15 * Math.cos(this.angle * Math.PI/128)];
+    var right = [10 * Math.SQRT2 * Math.cos((this.angle + 32) * Math.PI/128),
+                 10 * Math.SQRT2 * Math.sin((this.angle + 32) * Math.PI/128)];
+    var left = [-right[1], right[0]];
+
+    // Move point so it's defined relative to the player's front.
+    point = point.slice();
+    point[0] -= this.position[0] + front[0];
+    point[1] -= this.position[1] + front[1];
+
+    // Get the basis for our new coordinate system
+    var basis = [[right[0] - front[0], left[0] - front[0]],
+                 [right[1] - front[1], left[1] - front[1]]];
+    // Get the adjugate of that basis
+    var adjugate = [[basis[1][1], -basis[0][1]],
+                    [-basis[1][0], basis[0][0]]];
+    // Get the determinant of the basis
+    //var determinant = basis[0][0] * basis[1][1] - basis[0][1] * basis[1][0];
+    var determinant = 500; // It's always 500, so let's skip that math.
+
+    // Put our point in the new basis
+    var pointbasis = [(point[0] * adjugate[0][0] + point[1] * adjugate[0][1])/determinant,
+                      (point[0] * adjugate[1][0] + point[1] * adjugate[1][1])/determinant];
+
+    // If either coordinate is negative or their sum is greater than 1, the
+    // point isn't inside the triangle.  Otherwise, it is.
+    return pointbasis[0] >= 0 && pointbasis[1] >= 0 && pointbasis[0] + pointbasis[1] <= 1;
+}
+
 Player.prototype.fire = function() {
     if (this.shots.length < Variables.PLAYER_MAX_SHOTS) {
-        this.shots.push(new Shot(this.position.slice(), this.angle, 6));
+        var shotPos = this.position.slice();
+        shotPos[0] += 15 * Math.sin(this.angle * Math.PI/128);
+        shotPos[1] -= 15 * Math.cos(this.angle * Math.PI/128);
+        this.shots.push(new Shot(shotPos, this.angle, 6));
         return this.shots[this.shots.length - 1];
     } else {
         return null;
     }
 }
 
-Player.prototype.updateShots = function() {
+Player.prototype.updateShots = function(clients) {
     for (var s in this.shots) {
         this.shots[s].update();
+        for (var c in clients) {
+            if (clients[c].player.contains(this.shots[s].position)) {
+                clients[c].player.position[0] = 100;
+                clients[c].player.position[1] = 100;
+                clients[c].player.angle = 0;
+                this.shots[s].time = -1;
+                break;
+            }
+        }
         if (this.shots[s].time < 0)
             this.shots.splice(s, 1);
     }
@@ -113,7 +164,6 @@ function start(hs) {
 
                 // Shot
                 case 0x02:
-                    // TODO: do shotty-things here
                     var shot = this.player.fire();
 
                     if (shot === null) break;
@@ -146,14 +196,8 @@ function start(hs) {
     });
 
     // Send updates to this client
-    // TODO: Send updates to all clients in the same interval function, so
-    // that there's no chance that clients can get different information
-    // from one another.
     wss.interval = setInterval(function() {
         var player;
-        // TODO: do diffs here so fewer octets can be sent and the
-        // variables byte actually has a purpose.  This will make the reply
-        // buffer have a non-linear length, unfortunately.
         var reply = new Buffer(1 + 6*wss.clients.length);
         var offset = 1;
         reply[0] = 0x02;
@@ -193,7 +237,7 @@ function start(hs) {
             if (wss.clients[c].input & INPUTS.DOWN) {
                 wss.clients[c].player.drive(-Variables.PLAYER_REVERSE_SPEED);
             }
-            wss.clients[c].player.updateShots();
+            wss.clients[c].player.updateShots(wss.clients);
         }
     }, 100/6);
 }
