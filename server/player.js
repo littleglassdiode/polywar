@@ -110,16 +110,7 @@ Player.prototype.fire = function() {
 
 Player.prototype.updateShots = function(clients) {
     for (var s in this.shots) {
-        this.shots[s].update();
-        for (var c in clients) {
-            if (clients[c].player.contains(this.shots[s].position)) {
-                clients[c].player.position[0] = 100;
-                clients[c].player.position[1] = 100;
-                clients[c].player.angle = 0;
-                this.shots[s].time = -1;
-                break;
-            }
-        }
+        this.shots[s].update(clients);
         if (this.shots[s].time < 0) {
             this.shots[s].kill(this.id, clients);
             this.shots.splice(s, 1);

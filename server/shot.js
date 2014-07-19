@@ -12,11 +12,21 @@ function Shot(position, angle, speed) {
     this.time = Variables.SHOT_TIME;
 }
 
-Shot.prototype.update = function() {
+Shot.prototype.update = function(clients) {
     this.position[0] += this.velocity[0];
     this.position[1] += this.velocity[1];
 
     this.time--;
+
+    for (var c in clients) {
+        if (clients[c].player.contains(this.position)) {
+            clients[c].player.position[0] = 100;
+            clients[c].player.position[1] = 100;
+            clients[c].player.angle = 0;
+            this.time = -1;
+            break;
+        }
+    }
 }
 
 Shot.prototype.kill = function(id, clients) {
