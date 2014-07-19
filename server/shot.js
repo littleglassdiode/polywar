@@ -26,6 +26,7 @@ Shot.prototype.update = function(clients) {
                 clients[c].player.position[0] = 100;
                 clients[c].player.position[1] = 100;
                 clients[c].player.angle = 0;
+                clients[c].player.recalculateContains = true;
                 this.time = -1;
                 return;
             }
