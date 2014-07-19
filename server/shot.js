@@ -5,28 +5,34 @@ function Shot(position, angle, speed) {
     this.position = position;
     this.angle = angle;
     this.speed = speed;
+    this.normalVelocity = [
+        Math.sin(this.angle * Math.PI/128),
+        -Math.cos(this.angle * Math.PI/128)
+    ];
     this.velocity = [
-        this.speed * Math.sin(this.angle * Math.PI/128),
-        -this.speed * Math.cos(this.angle * Math.PI/128)
+        this.speed * this.normalVelocity[0],
+        this.speed * this.normalVelocity[1]
     ];
     this.time = Variables.SHOT_TIME;
 }
 
 Shot.prototype.update = function(clients) {
-    this.position[0] += this.velocity[0];
-    this.position[1] += this.velocity[1];
+    for (var i = 0; i < this.speed; i++) {
+        this.position[0] += this.normalVelocity[0];
+        this.position[1] += this.normalVelocity[1];
 
-    this.time--;
-
-    for (var c in clients) {
-        if (clients[c].player.contains(this.position)) {
-            clients[c].player.position[0] = 100;
-            clients[c].player.position[1] = 100;
-            clients[c].player.angle = 0;
-            this.time = -1;
-            break;
+        for (var c in clients) {
+            if (clients[c].player.contains(this.position)) {
+                clients[c].player.position[0] = 100;
+                clients[c].player.position[1] = 100;
+                clients[c].player.angle = 0;
+                this.time = -1;
+                return;
+            }
         }
     }
+
+    this.time--;
 }
 
 Shot.prototype.kill = function(id, clients) {

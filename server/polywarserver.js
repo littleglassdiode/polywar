@@ -116,8 +116,8 @@ function start(hs) {
 
         // Move however the inputs say to move
         for (var c in wss.clients) {
-            wss.clients[c].player.update();
             wss.clients[c].player.updateShots(wss.clients);
+            wss.clients[c].player.update();
         }
     }, 100/6);
 }

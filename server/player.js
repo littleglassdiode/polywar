@@ -17,6 +17,13 @@ function Player(position) {
     this.speed = 0;
     this.spin = 0;
     this.shots = [];
+
+    this.front = 0;
+    this.right = 0;
+    this.left = 0;
+    this.adjugate = 0;
+    this.determinant = 0;
+    this.recalculateContains = true;
 }
 
 Player.prototype.readInput = function(input) {
@@ -41,6 +48,10 @@ Player.prototype.update = function() {
 
     this.position[0] += this.speed * Math.sin(this.angle * Math.PI/128);
     this.position[1] -= this.speed * Math.cos(this.angle * Math.PI/128);
+
+    if (this.spin != 0 || this.speed != 0) {
+        this.recalculateContains = true;
+    }
 }
 
 Player.prototype.contains = function(point) {
@@ -50,32 +61,38 @@ Player.prototype.contains = function(point) {
         Math.abs(point[1] - this.position[1]) > 15) {
         return false;
     }
-    // Figure out the three corners of the player.  By knowing the player's
-    // shape, I can use some short-cuts here to make the math simpler.
-    var front = [15 * Math.sin(this.angle * Math.PI/128),
-                 -15 * Math.cos(this.angle * Math.PI/128)];
-    var right = [10 * Math.SQRT2 * Math.cos((this.angle + 32) * Math.PI/128),
-                 10 * Math.SQRT2 * Math.sin((this.angle + 32) * Math.PI/128)];
-    var left = [-right[1], right[0]];
+
+    if (this.recalculateContains) {
+        // Figure out the three corners of the player.  By knowing the player's
+        // shape, we can use some short-cuts here to make the math simpler.
+        this.front = [15 * Math.sin(this.angle * Math.PI/128),
+                     -15 * Math.cos(this.angle * Math.PI/128)];
+        this.right = [10 * Math.SQRT2 * Math.cos((this.angle + 32) * Math.PI/128),
+                     10 * Math.SQRT2 * Math.sin((this.angle + 32) * Math.PI/128)];
+        this.left = [-this.right[1], this.right[0]];
+        // Get the basis for our new coordinate system.
+        // Commented out because we don't actually need the basis ever.
+        //var basis = [[right[0] - front[0], left[0] - front[0]],
+        //             [right[1] - front[1], left[1] - front[1]]];
+        // Get the adjugate of that basis
+        this.adjugate = [[this.left[1] - this.front[1], this.front[0] - this.left[0]],
+                     [this.front[1] - this.right[1], this.right[0] - this.front[0]]];
+        // Get the determinant of the basis.
+        // The determinant of the adjugate is the same thing.
+        //var determinant = basis[0][0] * basis[1][1] - basis[0][1] * basis[1][0];
+        this.determinant = 500; // It's always 500, so let's skip that math.
+
+        this.recalculateContains = false;
+    }
 
     // Move point so it's defined relative to the player's front.
     point = point.slice();
-    point[0] -= this.position[0] + front[0];
-    point[1] -= this.position[1] + front[1];
+    point[0] -= this.position[0] + this.front[0];
+    point[1] -= this.position[1] + this.front[1];
 
-    // Get the basis for our new coordinate system
-    var basis = [[right[0] - front[0], left[0] - front[0]],
-                 [right[1] - front[1], left[1] - front[1]]];
-    // Get the adjugate of that basis
-    var adjugate = [[basis[1][1], -basis[0][1]],
-                    [-basis[1][0], basis[0][0]]];
-    // Get the determinant of the basis
-    //var determinant = basis[0][0] * basis[1][1] - basis[0][1] * basis[1][0];
-    var determinant = 500; // It's always 500, so let's skip that math.
-
-    // Put our point in the new basis
-    var pointbasis = [(point[0] * adjugate[0][0] + point[1] * adjugate[0][1])/determinant,
-                      (point[0] * adjugate[1][0] + point[1] * adjugate[1][1])/determinant];
+    // Put our point in the new basis.
+    var pointbasis = [(point[0] * this.adjugate[0][0] + point[1] * this.adjugate[0][1])/this.determinant,
+                      (point[0] * this.adjugate[1][0] + point[1] * this.adjugate[1][1])/this.determinant];
 
     // If either coordinate is negative or their sum is greater than 1, the
     // point isn't inside the triangle.  Otherwise, it is.
