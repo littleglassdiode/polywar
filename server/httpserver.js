@@ -16,6 +16,8 @@ function start(port) {
             contentType = 'application/javascript';
         } else if (ext === '.css') {
             contentType = 'text/css';
+        } else if (ext === '.png') {
+            contentType = 'image/png';
         }
 
         var filePath = path.join(__dirname, '/../client/', pathname);
