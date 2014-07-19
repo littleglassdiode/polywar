@@ -142,7 +142,7 @@ Shot.prototype.draw = function(ctx) {
     ctx.fillStyle = this.fill;
     ctx.strokeStyle = this.stroke;
     ctx.beginPath();
-    ctx.arc(this.position[0], this.position[1], 3, 0, 2*Math.PI);
+    ctx.arc(this.position[0], this.position[1], 2, 0, 2*Math.PI);
     ctx.fill();
     ctx.stroke();
 }
