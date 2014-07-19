@@ -14,16 +14,33 @@ function Player(position) {
     this.angle = 0;
     this.fill = randomColor();
     this.stroke = randomColor();
+    this.speed = 0;
+    this.spin = 0;
     this.shots = [];
 }
 
-Player.prototype.rotate = function(dir) {
-    this.angle += dir;
+Player.prototype.readInput = function(input) {
+    this.speed = 0;
+    this.spin = 0;
+    if (input & INPUTS.RIGHT) {
+        this.spin += Variables.PLAYER_ROTATION_SPEED;
+    }
+    if (input & INPUTS.LEFT) {
+        this.spin -= Variables.PLAYER_ROTATION_SPEED;
+    }
+    if (input & INPUTS.UP) {
+        this.speed += Variables.PLAYER_SPEED;
+    }
+    if (input & INPUTS.DOWN) {
+        this.speed += Variables.PLAYER_REVERSE_SPEED;
+    }
 }
 
-Player.prototype.drive = function(speed) {
-    this.position[0] += speed * Math.sin(this.angle * Math.PI/128);
-    this.position[1] -= speed * Math.cos(this.angle * Math.PI/128);
+Player.prototype.update = function() {
+    this.angle += this.spin;
+
+    this.position[0] += this.speed * Math.sin(this.angle * Math.PI/128);
+    this.position[1] -= this.speed * Math.cos(this.angle * Math.PI/128);
 }
 
 Player.prototype.contains = function(point) {
@@ -70,7 +87,7 @@ Player.prototype.fire = function() {
         var shotPos = this.position.slice();
         shotPos[0] += 15 * Math.sin(this.angle * Math.PI/128);
         shotPos[1] -= 15 * Math.cos(this.angle * Math.PI/128);
-        var shot = new Shot(shotPos, this.angle, 6);
+        var shot = new Shot(shotPos, this.angle, 6 + this.speed);
 
         // Same ID hack as used when creating a player
         for (var id = 0, found = true; found; id++) {
@@ -185,8 +202,7 @@ function start(hs) {
 
                 // Keys
                 case 0x01:
-                    // Put the buttons where they will be noticed later
-                    ws.input = msg[1];
+                    ws.player.readInput(msg[1]);
                     break;
 
                 // Shot
@@ -254,18 +270,7 @@ function start(hs) {
 
         // Move however the inputs say to move
         for (var c in wss.clients) {
-            if (wss.clients[c].input & INPUTS.RIGHT) {
-                wss.clients[c].player.rotate(Variables.PLAYER_ROTATION_SPEED);
-            }
-            if (wss.clients[c].input & INPUTS.LEFT) {
-                wss.clients[c].player.rotate(-Variables.PLAYER_ROTATION_SPEED);
-            }
-            if (wss.clients[c].input & INPUTS.UP) {
-                wss.clients[c].player.drive(Variables.PLAYER_SPEED);
-            }
-            if (wss.clients[c].input & INPUTS.DOWN) {
-                wss.clients[c].player.drive(-Variables.PLAYER_REVERSE_SPEED);
-            }
+            wss.clients[c].player.update();
             wss.clients[c].player.updateShots(wss.clients);
         }
     }, 100/6);
