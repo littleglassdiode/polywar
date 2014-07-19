@@ -99,8 +99,7 @@ Player.prototype.draw = function(ctx) {
     ctx.fillStyle = this.fill;
     ctx.strokeStyle = this.stroke;
     // I want an outline of 2px, but half is drawn outside the triangle, so I
-    // set it to 4.  The part outside the triangle will be removed with
-    // compositing.
+    // set it to 4.  The part outside the triangle will be removed.
     ctx.lineWidth = 4;
 
     // Transform according to the location and rotation of the player
@@ -113,11 +112,9 @@ Player.prototype.draw = function(ctx) {
     ctx.lineTo(10, 10);
     ctx.lineTo(-10, 10);
     ctx.closePath();
+    ctx.clip();
     // At this point, we can fill
     ctx.fill();
-    // Composite with source-atop to make only the part of the outline that's
-    // in the triangle get drawn
-    ctx.globalCompositeOperation = "source-atop";
     // Outline the triangle
     ctx.stroke();
 
