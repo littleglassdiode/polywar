@@ -70,8 +70,22 @@ Player.prototype.fire = function() {
         var shotPos = this.position.slice();
         shotPos[0] += 15 * Math.sin(this.angle * Math.PI/128);
         shotPos[1] -= 15 * Math.cos(this.angle * Math.PI/128);
-        this.shots.push(new Shot(shotPos, this.angle, 6));
-        return this.shots[this.shots.length - 1];
+        var shot = new Shot(shotPos, this.angle, 6);
+
+        // Same ID hack as used when creating a player
+        for (var id = 0, found = true; found; id++) {
+            found = false;
+            for (var s in this.shots) {
+                if (id === this.shots[s].id) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        shot.id = --id;
+
+        this.shots.push(shot);
+        return shot;
     } else {
         return null;
     }
@@ -89,12 +103,15 @@ Player.prototype.updateShots = function(clients) {
                 break;
             }
         }
-        if (this.shots[s].time < 0)
+        if (this.shots[s].time < 0) {
+            this.shots[s].kill(this.id, clients);
             this.shots.splice(s, 1);
+        }
     }
 }
 
 function Shot(position, angle, speed) {
+    this.id = undefined;
     this.position = position;
     this.angle = angle;
     this.speed = speed;
@@ -110,6 +127,16 @@ Shot.prototype.update = function() {
     this.position[1] += this.velocity[1];
 
     this.time--;
+}
+
+Shot.prototype.kill = function(id, clients) {
+    var msg = new Buffer(3);
+    msg[0] = 0x04;
+    msg[1] = id;
+    msg[2] = this.id;
+    for (var c in clients) {
+        clients[c].send(msg);
+    }
 }
 
 function start(hs) {
@@ -168,12 +195,14 @@ function start(hs) {
 
                     if (shot === null) break;
 
-                    var reply = new Buffer(7);
+                    var reply = new Buffer(9);
                     reply[0] = 0x03;
-                    reply.writeInt16BE(Math.floor(shot.position[0]*4), 1);
-                    reply.writeInt16BE(Math.floor(shot.position[1]*4), 3);
-                    reply[5] = shot.angle;
-                    reply[6] = shot.speed;
+                    reply[1] = this.player.id;
+                    reply[2] = shot.id;
+                    reply.writeInt16BE(Math.floor(shot.position[0]*4), 3);
+                    reply.writeInt16BE(Math.floor(shot.position[1]*4), 5);
+                    reply[7] = shot.angle;
+                    reply[8] = shot.speed;
                     for (var c in wss.clients) {
                         wss.clients[c].send(reply);
                     }

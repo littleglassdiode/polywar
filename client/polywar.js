@@ -79,6 +79,16 @@ function Player(fill, stroke) {
     this.angle = 0;
     this.fill = "rgb("+fill[0]+","+fill[1]+","+fill[2]+")";
     this.stroke = "rgb("+stroke[0]+","+stroke[1]+","+stroke[2]+")";
+    this.shots = [];
+}
+
+Player.prototype.killShot = function(id) {
+    for (s in this.shots) {
+        if (id == this.shots[s].id) {
+            this.shots.splice(s, 1);
+            return;
+        }
+    }
 }
 
 Player.prototype.draw = function(ctx) {
@@ -111,21 +121,19 @@ Player.prototype.draw = function(ctx) {
 }
 
 function Shot(data) {
-    this.position = [data.getInt16(0)/4, data.getInt16(2)/4];
-    this.angle = data.getInt8(4);
-    this.speed = data.getInt8(5);
+    this.id = data.getUint8(1);
+    this.position = [data.getInt16(2)/4, data.getInt16(4)/4];
+    this.angle = data.getInt8(6);
+    this.speed = data.getInt8(7);
     this.velocity = [
         this.speed * Math.sin(this.angle * Math.PI/128),
         -this.speed * Math.cos(this.angle * Math.PI/128)
     ];
-    this.time = 120;
 }
 
 Shot.prototype.update = function() {
     this.position[0] += this.velocity[0];
     this.position[1] += this.velocity[1];
-
-    this.time--;
 }
 
 Shot.prototype.draw = function(ctx) {
@@ -143,8 +151,6 @@ var server = new WebSocket("ws://" + window.location.host + "/polywar-server");
 var players = {};
 // The ID of the guy playing on this client will be stored here
 var my_id;
-
-var shots = [];
 
 var c, ctx;
 
@@ -210,8 +216,13 @@ server.onmessage = function drawGame(event) {
                 break;
             // Shot fired
             case 0x03:
-                var data = new DataView(msg, 1, 6);
-                shots.push(new Shot(data));
+                var data = new DataView(msg, 1, 8);
+                players[data.getUint8(0)].shots.push(new Shot(data));
+                break;
+            // Shot ended
+            case 0x04:
+                var data = new DataView(msg, 1, 2);
+                players[data.getUint8(0)].killShot(data.getUint8(1));
                 break;
         }
 
@@ -221,6 +232,14 @@ server.onmessage = function drawGame(event) {
 
         // Clear the canvas
         c.width = c.width;
+
+        // Draw all the shots
+        for (var p in players) {
+            for (var s in players[p].shots) {
+                players[p].shots[s].draw(ctx);
+                players[p].shots[s].update();
+            }
+        }
         // Draw all the players but me
         for (var p in players) {
             if (p == my_id)
@@ -229,14 +248,6 @@ server.onmessage = function drawGame(event) {
         }
         // Draw myself
         players[my_id].draw(ctx);
-
-        for (var s in shots) {
-            shots[s].draw(ctx);
-            shots[s].update();
-            if (shots[s].time < 0) {
-                delete shots[s];
-            }
-        }
     });
     reader.readAsArrayBuffer(event.data);
 }
