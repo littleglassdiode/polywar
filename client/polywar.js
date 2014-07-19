@@ -98,9 +98,7 @@ Player.prototype.draw = function(ctx) {
     // Set style
     ctx.fillStyle = this.fill;
     ctx.strokeStyle = this.stroke;
-    // I want an outline of 2px, but half is drawn outside the triangle, so I
-    // set it to 4.  The part outside the triangle will be removed.
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 2;
 
     // Transform according to the location and rotation of the player
     ctx.translate(this.position[0], this.position[1]);
@@ -108,11 +106,16 @@ Player.prototype.draw = function(ctx) {
 
     // Draw the triangle
     ctx.beginPath();
-    ctx.moveTo(0, -15);
-    ctx.lineTo(10, 10);
-    ctx.lineTo(-10, 10);
+    // The shape we want is below, commented out.
+    //ctx.moveTo(0, -15);
+    //ctx.lineTo(10, 10);
+    //ctx.lineTo(-10, 10);
+    // The shape we have to draw in order to keep the outline from extending
+    // beyond the shape we want.
+    ctx.moveTo(0, -12.307418); // (0, (2.5*25 + 10)/sqrt(25^2+10^2) - 15)
+    ctx.lineTo(8.522967, 9); // (-2 * -9 / 5 - sqrt(29)/5 + 6, 9)
+    ctx.lineTo(-8.522967, 9);
     ctx.closePath();
-    ctx.clip();
     // At this point, we can fill
     ctx.fill();
     // Outline the triangle
