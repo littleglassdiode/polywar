@@ -120,7 +120,7 @@ Player.prototype.draw = function(ctx) {
     ctx.restore();
 }
 
-function Shot(data) {
+function Shot(data, fill, stroke) {
     this.id = data.getUint8(1);
     this.position = [data.getInt16(2)/4, data.getInt16(4)/4];
     this.angle = data.getInt8(6);
@@ -129,6 +129,8 @@ function Shot(data) {
         this.speed * Math.sin(this.angle * Math.PI/128),
         -this.speed * Math.cos(this.angle * Math.PI/128)
     ];
+    this.fill = fill;
+    this.stroke = stroke;
 }
 
 Shot.prototype.update = function() {
@@ -137,8 +139,8 @@ Shot.prototype.update = function() {
 }
 
 Shot.prototype.draw = function(ctx) {
-    ctx.fillStyle = "#0f0";
-    ctx.strokeStyle = "#070";
+    ctx.fillStyle = this.fill;
+    ctx.strokeStyle = this.stroke;
     ctx.beginPath();
     ctx.arc(this.position[0], this.position[1], 3, 0, 2*Math.PI);
     ctx.fill();
@@ -217,7 +219,8 @@ server.onmessage = function drawGame(event) {
             // Shot fired
             case 0x03:
                 var data = new DataView(msg, 1, 8);
-                players[data.getUint8(0)].shots.push(new Shot(data));
+                var pid = data.getUint8(0);
+                players[pid].shots.push(new Shot(data, players[pid].fill, players[pid].stroke));
                 break;
             // Shot ended
             case 0x04:
