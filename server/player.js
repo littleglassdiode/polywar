@@ -10,7 +10,7 @@ function randomColor() {
 
 function Player(position) {
     this.id = undefined;
-    this.position = position;
+    this.position = position.slice();
     this.angle = 0;
     this.fill = randomColor();
     this.stroke = randomColor();

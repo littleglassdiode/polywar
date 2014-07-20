@@ -1,10 +1,28 @@
+var fs = require('fs');
+var path = require('path');
 var WebSocketServer = require('ws').Server;
 var Variables = require('./variables');
 var Player = require('./player').Player;
+var Rectangle = require('./rectangle').Rectangle;
 
 function start(hs) {
+    // Make our WebSocket server object
     var wss = new WebSocketServer({server: hs, path: "/polywar-server"});
 
+    var filePath = path.join(__dirname, '/../client/map.json');
+
+    // Read the map
+    fs.readFile(filePath, function (err, data) {
+        if (err) throw err;
+
+        wss.map = JSON.parse(data);
+        wss.rects = [];
+        for (var r in wss.map["rectangles"]) {
+            wss.rects.push(new Rectangle(wss.map["rectangles"][r]));
+        }
+    });
+
+    // Stuff to do when a player connects
     wss.on('connection', function(ws) {
         ws.on('message', function(message) {
             var msg = new Buffer(message);
@@ -82,11 +100,11 @@ function start(hs) {
         });
 
         // Give this client a player object
-        ws.player = new Player([100, 100]);
+        ws.player = new Player(wss.map.properties.spawn);
 
     });
 
-    // Send updates to this client
+    // Send updates to the clients
     wss.interval = setInterval(function() {
         var player;
         var reply = new Buffer(1 + 6*wss.clients.length);

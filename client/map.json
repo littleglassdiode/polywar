@@ -1,0 +1,28 @@
+{
+	"properties": {
+		"size": [1000, 1000],
+		"spawn": [0, 0]
+	},
+	"rectangles": [
+		{
+			"position": [500, 500],
+			"size": [50, 50],
+			"color": "#45c"
+		},
+		{
+			"position": [500, -500],
+			"size": [50, 50],
+			"color": "#5c4"
+		},
+		{
+			"position": [-500, 500],
+			"size": [50, 50],
+			"color": "#5c4"
+		},
+		{
+			"position": [-500, -500],
+			"size": [50, 50],
+			"color": "#c45"
+		}
+	]
+}

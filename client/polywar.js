@@ -152,12 +152,25 @@ Shot.prototype.draw = function(ctx) {
     ctx.stroke();
 }
 
+function Rectangle(jsonRect) {
+    this.position = jsonRect.position;
+    this.size = jsonRect.size;
+    this.color = jsonRect.color;
+}
+
+Rectangle.prototype.draw = function(ctx) {
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.position[0] - this.size[0], this.position[1] - this.size[1], this.size[0]*2, this.size[1]*2);
+}
+
 // Connect to the server
 var server = new WebSocket("ws://" + window.location.host + "/polywar-server");
 // Players will be stored here
 var players = {};
 // The ID of the guy playing on this client will be stored here
 var my_id;
+
+var rects = [];
 
 var c, ctx;
 
@@ -241,6 +254,8 @@ server.onmessage = function drawGame(event) {
         // Clear the canvas
         c.width = c.width;
 
+        ctx.save();
+        ctx.translate(-players[my_id].position[0] + 400, -players[my_id].position[1] + 300);
         // Draw all the shots
         for (var p in players) {
             for (var s in players[p].shots) {
@@ -256,6 +271,12 @@ server.onmessage = function drawGame(event) {
         }
         // Draw myself
         players[my_id].draw(ctx);
+
+        // Draw rectangles
+        for (var r in rects) {
+            rects[r].draw(ctx);
+        }
+        ctx.restore();
     });
     reader.readAsArrayBuffer(event.data);
 }
@@ -267,4 +288,24 @@ window.onload = function() {
 
     document.addEventListener("keydown", press, true);
     document.addEventListener("keyup", release, true);
+
+    // Get the map
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/map.json", true);
+    xhr.onload = function (e) {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                for (var r in response["rectangles"]) {
+                    rects.push(new Rectangle(response["rectangles"][r]));
+                }
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.onerror = function (e) {
+        console.error(xhr.statusText);
+    };
+    xhr.send(null);
 }

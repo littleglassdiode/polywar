@@ -18,6 +18,8 @@ function start(port) {
             contentType = 'text/css';
         } else if (ext === '.png') {
             contentType = 'image/png';
+        } else if (ext === '.json') {
+            contentType = 'application/json';
         }
 
         var filePath = path.join(__dirname, '/../client/', pathname);
