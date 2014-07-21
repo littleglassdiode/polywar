@@ -170,7 +170,7 @@ var players = {};
 // The ID of the guy playing on this client will be stored here
 var my_id;
 
-var rects = [];
+var map;
 
 var c, ctx;
 
@@ -273,9 +273,12 @@ server.onmessage = function drawGame(event) {
         players[my_id].draw(ctx);
 
         // Draw rectangles
-        for (var r in rects) {
-            rects[r].draw(ctx);
+        for (var r in map.rectangles) {
+            map.rectangles[r].draw(ctx);
         }
+        ctx.strokeStyle = "#ccc";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-map.properties.size[0] - 1, -map.properties.size[1] - 1, 2*map.properties.size[0] + 1, 2*map.properties.size[1] + 1);
         ctx.restore();
     });
     reader.readAsArrayBuffer(event.data);
@@ -295,9 +298,9 @@ window.onload = function() {
     xhr.onload = function (e) {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                for (var r in response["rectangles"]) {
-                    rects.push(new Rectangle(response["rectangles"][r]));
+                map = JSON.parse(xhr.responseText);
+                for (var r in map.rectangles) {
+                    map.rectangles[r] = new Rectangle(map.rectangles[r]);
                 }
             } else {
                 console.error(xhr.statusText);

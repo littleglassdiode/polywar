@@ -23,10 +23,7 @@ Shot.prototype.update = function(clients) {
 
         for (var c in clients) {
             if (clients[c].player.contains(this.position)) {
-                clients[c].player.position[0] = 100;
-                clients[c].player.position[1] = 100;
-                clients[c].player.angle = 0;
-                clients[c].player.recalculateContains = true;
+                clients[c].player.spawn();
                 this.time = -1;
                 return;
             }

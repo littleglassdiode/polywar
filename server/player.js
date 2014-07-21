@@ -10,8 +10,7 @@ function randomColor() {
 
 function Player(position) {
     this.id = undefined;
-    this.position = position.slice();
-    this.angle = 0;
+    this.spawnPosition = position.slice();
     this.fill = randomColor();
     this.stroke = randomColor();
     this.speed = 0;
@@ -23,6 +22,13 @@ function Player(position) {
     this.left = 0;
     this.adjugate = 0;
     this.determinant = 0;
+
+    this.spawn();
+}
+
+Player.prototype.spawn = function() {
+    this.position = this.spawnPosition.slice();
+    this.angle = 0;
     this.recalculateContains = true;
 }
 
