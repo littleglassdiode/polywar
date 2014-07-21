@@ -278,7 +278,7 @@ server.onmessage = function drawGame(event) {
         }
         ctx.strokeStyle = "#ccc";
         ctx.lineWidth = 2;
-        ctx.strokeRect(-map.properties.size[0] - 1, -map.properties.size[1] - 1, 2*map.properties.size[0] + 1, 2*map.properties.size[1] + 1);
+        ctx.strokeRect(-map.properties.size[0] - 1, -map.properties.size[1] - 1, 2*map.properties.size[0] + 2, 2*map.properties.size[1] + 2);
         ctx.restore();
     });
     reader.readAsArrayBuffer(event.data);

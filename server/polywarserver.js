@@ -16,9 +16,8 @@ function start(hs) {
         if (err) throw err;
 
         wss.map = JSON.parse(data);
-        wss.rects = [];
-        for (var r in wss.map["rectangles"]) {
-            wss.rects.push(new Rectangle(wss.map["rectangles"][r]));
+        for (var r in wss.map.rectangles) {
+            wss.map.rectangles[r] = new Rectangle(wss.map.rectangles[r]);
         }
     });
 
@@ -100,8 +99,7 @@ function start(hs) {
         });
 
         // Give this client a player object
-        ws.player = new Player(wss.map.properties.spawn);
-
+        ws.player = new Player(wss.map);
     });
 
     // Send updates to the clients

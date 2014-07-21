@@ -8,14 +8,15 @@ function randomColor() {
             Math.floor(Math.random() * 255)];
 }
 
-function Player(position) {
+function Player(map) {
     this.id = undefined;
-    this.spawnPosition = position.slice();
+    this.spawnPosition = map.properties.spawn.slice();
     this.fill = randomColor();
     this.stroke = randomColor();
     this.speed = 0;
     this.spin = 0;
     this.shots = [];
+    this.map = map;
 
     this.front = 0;
     this.right = 0;
@@ -52,12 +53,29 @@ Player.prototype.readInput = function(input) {
 Player.prototype.update = function() {
     this.angle += this.spin;
 
-    this.position[0] += this.speed * Math.sin(this.angle * Math.PI/128);
-    this.position[1] -= this.speed * Math.cos(this.angle * Math.PI/128);
+    var newPosition = this.position.slice();
+
+    newPosition[0] += this.speed * Math.sin(this.angle * Math.PI/128);
+    newPosition[1] -= this.speed * Math.cos(this.angle * Math.PI/128);
+    if (newPosition[0] < -this.map.properties.size[0])
+        newPosition[0] = -this.map.properties.size[0];
+    if (newPosition[1] < -this.map.properties.size[1])
+        newPosition[1] = -this.map.properties.size[1];
+    if (newPosition[0] > this.map.properties.size[0])
+        newPosition[0] = this.map.properties.size[0];
+    if (newPosition[1] > this.map.properties.size[1])
+        newPosition[1] = this.map.properties.size[1];
+    for (r in this.map.rectangles) {
+        if (this.map.rectangles[r].contains(newPosition)) {
+            newPosition = this.position;
+        }
+    }
 
     if (this.spin != 0 || this.speed != 0) {
         this.recalculateContains = true;
     }
+
+    this.position = newPosition;
 }
 
 Player.prototype.contains = function(point) {
