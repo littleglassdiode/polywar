@@ -152,6 +152,12 @@ Player.prototype.fire = function() {
 Player.prototype.updateShots = function(clients) {
     for (var s in this.shots) {
         this.shots[s].update(clients);
+        for (var r in this.map.rectangles) {
+            if (this.map.rectangles[r].contains(this.shots[s].position)) {
+                this.shots[s].time = -1;
+                break;
+            }
+        }
         if (this.shots[s].time < 0) {
             this.shots[s].kill(this.id, clients);
             this.shots.splice(s, 1);
