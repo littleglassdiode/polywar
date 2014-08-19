@@ -1,6 +1,7 @@
-var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40, SPACE:32};
+var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40, SPACE:32, N1: 49, N2: 50, N3: 51};
 var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08, SPACE: 0x10};
 var input = 0;
+var scale = 1.0;
 
 function press(evt) {
     var code = evt.keyCode;
@@ -44,6 +45,15 @@ function press(evt) {
                 server.sendPacket(0x02, []);
                 send = false;
             }
+            break;
+        case KEY.N1:
+            scale = 2.0;
+            break;
+        case KEY.N2:
+            scale = 1.0;
+            break;
+        case KEY.N3:
+            scale = 0.5;
             break;
     }
     if (send)
@@ -257,7 +267,8 @@ server.onmessage = function drawGame(event) {
         c.height = window.innerHeight;
 
         ctx.save();
-        ctx.translate(-players[my_id].position[0] + c.width/2, -players[my_id].position[1] + c.height/2);
+        ctx.scale(scale, scale);
+        ctx.translate(-players[my_id].position[0] + c.width/scale/2, -players[my_id].position[1] + c.height/scale/2);
         // Draw all the shots
         for (var p in players) {
             for (var s in players[p].shots) {
