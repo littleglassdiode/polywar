@@ -135,7 +135,7 @@ function start(hs) {
             wss.clients[c].player.updateShots(wss.clients);
             wss.clients[c].player.update();
         }
-    }, 100/6);
+    }, 1000/Variables.FPS);
 }
 
 exports.start = start;

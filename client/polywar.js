@@ -262,13 +262,15 @@ server.onmessage = function drawGame(event) {
         // server
 
         // Clear the canvas
-//        c.width = c.width;
         c.width = window.innerWidth;
         c.height = window.innerHeight;
 
         ctx.save();
         ctx.scale(scale, scale);
-        ctx.translate(-players[my_id].position[0] + c.width/scale/2, -players[my_id].position[1] + c.height/scale/2);
+        ctx.translate(c.width/scale/2, c.height/scale/2);
+        // Uncomment this line to make the whole view rotate with the player
+        //ctx.rotate(-players[my_id].angle * Math.PI/128);
+        ctx.translate(-players[my_id].position[0], -players[my_id].position[1]);
         // Draw all the shots
         for (var p in players) {
             for (var s in players[p].shots) {

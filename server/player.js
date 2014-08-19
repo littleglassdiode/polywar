@@ -62,6 +62,11 @@ Player.prototype.readInput = function(input) {
 
 Player.prototype.update = function() {
     this.angle += this.spin;
+    this.angle %= 256;
+    // Turn the remainder into a real modulo
+    if (this.angle < 0) {
+        this.angle += 256;
+    }
 
     var oldPosition = this.position.slice();
 
