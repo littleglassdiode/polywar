@@ -8,11 +8,21 @@ function randomColor() {
             Math.floor(Math.random() * 255)];
 }
 
+function randomDarkColor() {
+    return [Math.floor(Math.random() * 127), Math.floor(Math.random() * 127),
+            Math.floor(Math.random() * 127)];
+}
+
+function randomLightColor() {
+    return [Math.floor(128 + Math.random() * 127), Math.floor(128 + Math.random() * 127),
+            Math.floor(128 + Math.random() * 127)];
+}
+
 function Player(map) {
     this.id = undefined;
     this.spawnPosition = map.properties.spawn.slice();
-    this.fill = randomColor();
-    this.stroke = randomColor();
+    this.fill = randomDarkColor();
+    this.stroke = randomLightColor();
     this.speed = 0;
     this.spin = 0;
     this.shots = [];
