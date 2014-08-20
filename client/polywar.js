@@ -151,6 +151,23 @@ function Shot(data, fill, stroke) {
 Shot.prototype.update = function() {
     this.position[0] += this.velocity[0];
     this.position[1] += this.velocity[1];
+
+    if (this.position[0] > map.properties.size[0]) {
+        this.position[0] = 2*map.properties.size[0] - this.position[0];
+        this.velocity[0] = -this.velocity[0];
+    }
+    if (this.position[0] < -map.properties.size[0]) {
+        this.position[0] = -2*map.properties.size[0] - this.position[0];
+        this.velocity[0] = -this.velocity[0];
+    }
+    if (this.position[1] > map.properties.size[1]) {
+        this.position[1] = 2*map.properties.size[1] - this.position[1];
+        this.velocity[1] = -this.velocity[1];
+    }
+    if (this.position[1] < -map.properties.size[1]) {
+        this.position[1] = -2*map.properties.size[1] - this.position[1];
+        this.velocity[1] = -this.velocity[1];
+    }
 }
 
 Shot.prototype.draw = function(ctx) {

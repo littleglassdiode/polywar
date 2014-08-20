@@ -142,7 +142,7 @@ Player.prototype.fire = function() {
         var shotPos = this.position.slice();
         shotPos[0] += 15 * Math.sin(this.angle * Math.PI/128);
         shotPos[1] -= 15 * Math.cos(this.angle * Math.PI/128);
-        var shot = new Shot(shotPos, this.angle, 6 + this.speed);
+        var shot = new Shot(shotPos, this.angle, 6 + this.speed, this.map);
 
         // Same ID hack as used when creating a player
         for (var id = 0, found = true; found; id++) {
@@ -166,12 +166,6 @@ Player.prototype.fire = function() {
 Player.prototype.updateShots = function(clients) {
     for (var s in this.shots) {
         this.shots[s].update(clients);
-        for (var r in this.map.rectangles) {
-            if (this.map.rectangles[r].contains(this.shots[s].position)) {
-                this.shots[s].time = -1;
-                break;
-            }
-        }
         if (this.shots[s].time < 0) {
             this.shots[s].kill(this.id, clients);
             this.shots.splice(s, 1);
