@@ -33,6 +33,7 @@ function start(hs) {
                     reply.push(0x00);
                     // Figure out the lowest available ID and assign it
                     // TODO: Nothing stops this from becoming greater than 255
+                    // TODO: Assigning an ID should definitely not be O(n^2).
                     for (var id = 0, found = true; found; id++) {
                         found = false;
                         for (var c in wss.clients) {
@@ -46,20 +47,24 @@ function start(hs) {
                     reply.push(id);
                     reply.push.apply(reply, this.player.fill);
                     reply.push.apply(reply, this.player.stroke);
+                    // Tell everyone about the new player
                     for (var c in wss.clients) {
                         wss.clients[c].send(new Buffer(reply));
                     }
 
                     // Send everyone's info to the new player
                     for (var c in wss.clients) {
-                        reply = [];
-                        if (wss.clients[c].player.id === this.player.id)
-                            continue;
-                        reply.push(0x00);
-                        reply.push(wss.clients[c].player.id);
-                        reply.push.apply(reply, wss.clients[c].player.fill);
-                        reply.push.apply(reply, wss.clients[c].player.stroke);
-                        this.send(new Buffer(reply));
+                        // But don't send the new player's info to himself
+                        // again, since the client treats the first player
+                        // received as *the* player.
+                        if (wss.clients[c].player.id !== this.player.id) {
+                            reply = [];
+                            reply.push(0x00);
+                            reply.push(wss.clients[c].player.id);
+                            reply.push.apply(reply, wss.clients[c].player.fill);
+                            reply.push.apply(reply, wss.clients[c].player.stroke);
+                            this.send(new Buffer(reply));
+                        }
                     }
                     break;
 
@@ -70,20 +75,26 @@ function start(hs) {
 
                 // Shot
                 case 0x02:
+                    // Try to fire a shot
                     var shot = this.player.fire();
 
-                    if (shot === null) break;
-
-                    var reply = new Buffer(9);
-                    reply[0] = 0x03;
-                    reply[1] = this.player.id;
-                    reply[2] = shot.id;
-                    reply.writeInt16BE(Math.floor(shot.position[0]*4), 3);
-                    reply.writeInt16BE(Math.floor(shot.position[1]*4), 5);
-                    reply[7] = shot.angle;
-                    reply[8] = shot.speed;
-                    for (var c in wss.clients) {
-                        wss.clients[c].send(reply);
+                    // If we were successful, tell all the clients about it.
+                    // TODO: This should probably be sent in the big update
+                    // packet rather than in its own packet to avoid timing
+                    // problems (shots going through things before being
+                    // destroyed, &c).
+                    if (shot !== null) {
+                        var reply = new Buffer(9);
+                        reply[0] = 0x03;
+                        reply[1] = this.player.id;
+                        reply[2] = shot.id;
+                        reply.writeInt16BE(Math.floor(shot.position[0]*4), 3);
+                        reply.writeInt16BE(Math.floor(shot.position[1]*4), 5);
+                        reply[7] = shot.angle;
+                        reply[8] = shot.speed;
+                        for (var c in wss.clients) {
+                            wss.clients[c].send(reply);
+                        }
                     }
                     break;
             }
