@@ -22,7 +22,8 @@ function start(port) {
             contentType = 'application/json';
         }
 
-        var filePath = path.join(__dirname, '/../client/', pathname);
+        pathname = path.join.apply(this, pathname.split(path.sep));
+        var filePath = path.join(__dirname, '..', 'client', pathname);
         try {
             var stat = fs.statSync(filePath);
 

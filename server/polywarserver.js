@@ -9,7 +9,7 @@ function start(hs) {
     // Make our WebSocket server object
     var wss = new WebSocketServer({server: hs, path: "/polywar-server"});
 
-    var filePath = path.join(__dirname, '/../client/map.json');
+    var filePath = path.join(__dirname, '..', 'client', 'map.json');
 
     // Read the map
     fs.readFile(filePath, function (err, data) {
