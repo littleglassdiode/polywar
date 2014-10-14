@@ -22,7 +22,9 @@ function start(port) {
             contentType = 'application/json';
         }
 
-        pathname = path.join.apply(this, pathname.split(path.sep));
+        // Get the path separator to the right character for this OS
+        pathname = path.join.apply(this, pathname.split('/'));
+        // Get the right path for the file requested
         var filePath = path.join(__dirname, '..', 'client', pathname);
         try {
             var stat = fs.statSync(filePath);
