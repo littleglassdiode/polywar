@@ -3,7 +3,9 @@ var path = require('path');
 var fs = require('fs');
 var url = require('url');
 
-function start(port) {
+var Variables = require('./variables');
+
+function start() {
     function handleRequest(request, response) {
         var pathname = url.parse(request.url).pathname;
         if (pathname === '/')
@@ -45,7 +47,7 @@ function start(port) {
     }
 
     var server = http.createServer(handleRequest);
-    server.listen(port);
+    server.listen(Variables.HTTP_PORT);
 
     return server;
 }
