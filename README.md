@@ -28,11 +28,13 @@ love >muh freedoms, GNOME Web (Epiphany) should be fine too.
 
 ## Controls
 
-W / Up: Drive forward
-S / Down: Drive backward
-A / Left: Turn counterclockwise
-D / Right: Turn clockwise
-Space: Shoot
-1: Zoom close
-2: Zoom medium
-3: Zoom far
+|       Key | Action                |
+|----------:|:----------------------|
+|    W / Up | Drive forward         |
+|  S / Down | Drive backward        |
+|  A / Left | Turn counterclockwise |
+| D / Right | Turn clockwise        |
+|     Space | Shoot                 |
+|         1 | Zoom close            |
+|         2 | Zoom medium           |
+|         3 | Zoom far              |
