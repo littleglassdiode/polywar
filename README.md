@@ -7,7 +7,7 @@ Node.js and the client is made to run in a modern HTML5-compliant web browser.
 
 ## Running the Server
 
-Ensure that Node.js 0.10.33 is installed.  Other versions may work, but this is
+Ensure that Node.js 6.2.0 is installed.  Other versions may work, but this is
 the version on which development is done, so it is almost sure to work
 properly.  Once this is installed, the server can be run by `cd`-ing into the
 root of the repository and running:
@@ -24,7 +24,8 @@ you chose instead of 8080) in a web browser.  On other computers, you or your
 friends can connect by substituting your computer's IP address for localhost.
 As for what web browser to use, Chrom[e|ium] should work well.  Firefox should
 also work, though it tends to have a lower framerate on slow computers.  If you
-love >muh freedoms, GNOME Web (Epiphany) should be fine too.
+use Linux, GNOME Web (a.k.a. Epiphany) works about as well as Google's browsers,
+so I recommend it over Firefox.
 
 ## Controls
 
@@ -38,3 +39,4 @@ love >muh freedoms, GNOME Web (Epiphany) should be fine too.
 |         1 | Zoom close            |
 |         2 | Zoom medium           |
 |         3 | Zoom far              |
+|         R | Toggle view rotation  |
