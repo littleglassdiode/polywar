@@ -1,7 +1,8 @@
-var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40, SPACE:32, N1: 49, N2: 50, N3: 51};
+var KEY = {D: 68, W: 87, A: 65, S:83, RIGHT:39, UP:38, LEFT:37, DOWN:40, SPACE:32, N1: 49, N2: 50, N3: 51, R: 82};
 var INPUTS = {UP: 0x01, DOWN: 0x02, LEFT: 0x04, RIGHT: 0x08, SPACE: 0x10};
 var input = 0;
 var scale = 1.0;
+var rotate = false;
 
 function press(evt) {
     var code = evt.keyCode;
@@ -54,6 +55,9 @@ function press(evt) {
             break;
         case KEY.N3:
             scale = 0.5;
+            break;
+        case KEY.R:
+            rotate = !rotate;
             break;
     }
     if (send)
@@ -114,8 +118,29 @@ Player.prototype.draw = function(ctx) {
     ctx.translate(this.position[0], this.position[1]);
     ctx.rotate(this.angle * Math.PI/128);
 
-    // Draw the triangle
     ctx.beginPath();
+    ctx.moveTo(9, -15);
+    ctx.lineTo(-9, -15);
+    ctx.lineTo(-9, 15);
+    ctx.lineTo(9, 15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -20);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, 2*Math.PI);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw the triangle
+    /*ctx.beginPath();
     // The shape we want is below, commented out.
     //ctx.moveTo(0, -15);
     //ctx.lineTo(10, 10);
@@ -129,7 +154,7 @@ Player.prototype.draw = function(ctx) {
     // At this point, we can fill
     ctx.fill();
     // Outline the triangle
-    ctx.stroke();
+    ctx.stroke();*/
 
     // Undo our transformations
     ctx.restore();
@@ -285,8 +310,9 @@ server.onmessage = function drawGame(event) {
         ctx.save();
         ctx.scale(scale, scale);
         ctx.translate(c.width/scale/2, c.height/scale/2);
-        // Uncomment this line to make the whole view rotate with the player
-        //ctx.rotate(-players[my_id].angle * Math.PI/128);
+        if (rotate) {
+            ctx.rotate(-players[my_id].angle * Math.PI/128);
+        }
         ctx.translate(-players[my_id].position[0], -players[my_id].position[1]);
         // Draw all the shots
         for (var p in players) {
