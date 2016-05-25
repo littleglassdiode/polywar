@@ -95,53 +95,37 @@ Player.prototype.update = function() {
 Player.prototype.contains = function(point) {
     // Quit before any additional math if there's obviously no way the point is
     // in the player.
-    if (Math.abs(point[0] - this.position[0]) > 15 ||
-        Math.abs(point[1] - this.position[1]) > 15) {
+    if (Math.abs(point[0] - this.position[0]) > 19 ||
+        Math.abs(point[1] - this.position[1]) > 19) {
         return false;
     }
 
     if (this.recalculateContains) {
-        // Figure out the three corners of the player.  By knowing the player's
-        // shape, we can use some short-cuts here to make the math simpler.
-        this.front = [15 * Math.sin(this.angle * Math.PI/128),
-                     -15 * Math.cos(this.angle * Math.PI/128)];
-        this.right = [10 * Math.SQRT2 * Math.cos((this.angle + 32) * Math.PI/128),
-                     10 * Math.SQRT2 * Math.sin((this.angle + 32) * Math.PI/128)];
-        this.left = [-this.right[1], this.right[0]];
-        // Get the basis for our new coordinate system.
-        // Commented out because we don't actually need the basis ever.
-        //var basis = [[right[0] - front[0], left[0] - front[0]],
-        //             [right[1] - front[1], left[1] - front[1]]];
-        // Get the adjugate of that basis
-        this.adjugate = [[this.left[1] - this.front[1], this.front[0] - this.left[0]],
-                     [this.front[1] - this.right[1], this.right[0] - this.front[0]]];
-        // Get the determinant of the basis.
-        // The determinant of the adjugate is the same thing.
-        //var determinant = basis[0][0] * basis[1][1] - basis[0][1] * basis[1][0];
-        this.determinant = 500; // It's always 500, so let's skip that math.
-
+        // Calculate sine and cosine of the player's angle
+        this.rotatevec = [Math.sin(this.angle * Math.PI/128),
+                          Math.cos(this.angle * Math.PI/128)];
         this.recalculateContains = false;
     }
 
-    // Move point so it's defined relative to the player's front.
+    // Move point so it's defined relative to the player's center
     point = point.slice();
-    point[0] -= this.position[0] + this.front[0];
-    point[1] -= this.position[1] + this.front[1];
+    point[0] -= this.position[0];
+    point[1] -= this.position[1];
 
-    // Put our point in the new basis.
-    var pointbasis = [(point[0] * this.adjugate[0][0] + point[1] * this.adjugate[0][1])/this.determinant,
-                      (point[0] * this.adjugate[1][0] + point[1] * this.adjugate[1][1])/this.determinant];
+    // Rotate our point so it's defined in the same coordinates as the player's
+    // corners.
+    var pointbasis = [point[0] * this.rotatevec[1] - point[1] * this.rotatevec[0],
+                      point[0] * this.rotatevec[0] + point[1] * this.rotatevec[1]];
 
-    // If either coordinate is negative or their sum is greater than 1, the
-    // point isn't inside the triangle.  Otherwise, it is.
-    return pointbasis[0] >= 0 && pointbasis[1] >= 0 && pointbasis[0] + pointbasis[1] <= 1;
+    // Return whether pointbasis is inside the player's boundaries
+    return pointbasis[0] >= -10 && pointbasis[1] >= -16 && pointbasis[0] <= 10 && pointbasis[1] <= 16;
 }
 
 Player.prototype.fire = function() {
     if (this.shots.length < Variables.PLAYER_MAX_SHOTS) {
         var shotPos = this.position.slice();
-        shotPos[0] += 15 * Math.sin(this.angle * Math.PI/128);
-        shotPos[1] -= 15 * Math.cos(this.angle * Math.PI/128);
+        shotPos[0] += 20 * Math.sin(this.angle * Math.PI/128);
+        shotPos[1] -= 20 * Math.cos(this.angle * Math.PI/128);
         var shot = new Shot(shotPos, this.angle, 6 + this.speed, this.map);
 
         // Same ID hack as used when creating a player
